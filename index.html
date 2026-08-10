@@ -666,14 +666,14 @@ function renderMonth() {
   if (catRows.length === 0) {
     catTableHtml = '<div class="empty-state">Ni podatkov za ta mesec.</div>';
   } else {
-    catTableHtml = `<div class="table-scroll"><table><thead><tr>
+    catTableHtml = `<table><thead><tr>
         <th>Kategorija</th><th class="num">Znesek</th><th class="num">Delež</th>
       </tr></thead><tbody>` +
       catRows.map(([cat, znesek]) => {
         const delez = sumSkupaj > 0 ? ((znesek / sumSkupaj) * 100).toFixed(1) : '0.0';
         return `<tr><td>${escapeHtml(cat)}</td><td class="num">${znesek.toFixed(2)} €</td><td class="num">${delez} %</td></tr>`;
       }).join('') +
-      `</tbody></table></div>`;
+      `</tbody></table>`;
   }
 
   // Seznam transakcij (Kategorija skrita, Datum skrajšan na dd.mm.)
