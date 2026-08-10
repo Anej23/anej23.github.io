@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skupni Stroškovnik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1b1f27;
+    --paper:#f6f7f5;
+    --card:#ffffff;
+    --line:#e3e6e1;
+    --anej:#2f6f9e;      /* modra – Anej */
+    --anej-bg:#e8f1f8;
+    --ursa:#c1447e;      /* malinasta – Urša */
+    --ursa-bg:#fbeaf2;
+    --skupaj:#3f7a58;    /* zelena – skupaj */
+    --skupaj-bg:#e9f3ec;
+    --muted:#6b7280;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+  }
+  .wrap{
+    max-width:520px;
+    margin:0 auto;
+    padding:20px 16px 80px;
+  }
+
+  /* ---------- LOGIN ---------- */
+  #login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:36px 28px;
+    width:100%;
+    max-width:360px;
+    text-align:center;
+  }
+  .login-card .lock{
+    font-size:32px;
+    display:block;
+    margin-bottom:8px;
+  }
+  .login-card h1{
+    font-size:22px;
+    margin:0 0 20px;
+  }
+  input[type="password"], input[type="text"], input[type="number"], input[type="date"], select{
+    width:100%;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    font-size:15px;
+    background:#fff;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  input:focus, select:focus, button:focus-visible{
+    outline:2px solid var(--anej);
+    outline-offset:1px;
+  }
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .btn-primary{
+    width:100%;
+    margin-top:14px;
+    padding:12px 14px;
+    border:none;
+    border-radius:10px;
+    background:var(--ink);
+    color:#fff;
+    font-size:15px;
+    font-weight:600;
+  }
+  .btn-primary:disabled{opacity:.5;}
+  .error-text{
+    color:#b3261e;
+    font-size:13px;
+    margin-top:10px;
+    min-height:16px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  header .brand{
+    font-size:20px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .icon-btn{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--muted);
+    margin:0 0 14px;
+  }
+  .field-label{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:8px;
+    display:block;
+  }
+  .field{margin-bottom:16px;}
+
+  /* pills */
+  .pill-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .pill{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:999px;
+    padding:8px 14px;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .pill.active{
+    color:#fff;
+    border-color:transparent;
+  }
+  .pill.active.person-anej{background:var(--anej);}
+  .pill.active.person-ursa{background:var(--ursa);}
+  .pill.active.neutral{background:var(--ink);}
+
+  #date-custom{margin-top:10px;display:none;}
+
+  .save-note{
+    font-size:13px;
+    margin-top:10px;
+    min-height:16px;
+  }
+  .save-note.ok{color:var(--skupaj);}
+  .save-note.err{color:#b3261e;}
+
+  /* ---------- OVERVIEW ---------- */
+  .overview-controls{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .overview-controls select{flex:1;}
+
+  .metrics{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .metric{
+    border-radius:12px;
+    padding:12px 10px;
+    text-align:center;
+  }
+  .metric.anej{background:var(--anej-bg); color:var(--anej);}
+  .metric.ursa{background:var(--ursa-bg); color:var(--ursa);}
+  .metric.skupaj{background:var(--skupaj-bg); color:var(--skupaj);}
+  .metric .label{font-size:12px; font-weight:600; opacity:.8;}
+  .metric .value{font-size:18px; font-weight:700; margin-top:2px;}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+  }
+  th{
+    text-align:left;
+    color:var(--muted);
+    font-weight:600;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    padding:6px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  td{
+    padding:8px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  td.num, th.num{text-align:right;}
+  .empty-state{
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+    padding:20px 0;
+  }
+  .badge-person{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:999px;
+    font-size:11.5px;
+    font-weight:600;
+  }
+  .badge-person.anej{background:var(--anej-bg); color:var(--anej);}
+  .badge-person.ursa{background:var(--ursa-bg); color:var(--ursa);}
+
+  .loading{
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+    padding:10px 0;
+  }
+
+  #app-screen{display:none;}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login-screen">
+  <div class="login-card">
+    <span class="lock">🔒</span>
+    <h1>Prijava</h1>
+    <input type="password" id="password-input" placeholder="Vnesi geslo za dostop">
+    <button class="btn-primary" id="login-btn">Vstop</button>
+    <div class="error-text" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app-screen">
+  <div class="wrap">
+
+    <header>
+      <div class="brand">💸 Skupni Denarnik</div>
+      <button class="icon-btn" id="logout-btn">Odjava</button>
+    </header>
+
+    <!-- NOV VNOS -->
+    <section class="card">
+      <h2>Nov vnos</h2>
+
+      <div class="field">
+        <span class="field-label">Kdo je plačal?</span>
+        <div class="pill-group" id="oseba-group">
+          <button class="pill person-anej active" data-value="Anej">Anej</button>
+          <button class="pill person-ursa" data-value="Urša">Urša</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Datum stroška</span>
+        <div class="pill-group" id="datum-hitri-group">
+          <button class="pill neutral active" data-value="Danes">Danes</button>
+          <button class="pill neutral" data-value="Včeraj">Včeraj</button>
+          <button class="pill neutral" data-value="Drug datum">Drug datum</button>
+        </div>
+        <input type="date" id="date-custom">
+      </div>
+
+      <div class="field">
+        <span class="field-label">Kategorija</span>
+        <div class="pill-group" id="kategorija-group"></div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Opis nakupa</span>
+        <input type="text" id="opis-input" placeholder="Npr. Mercator, Petrol...">
+      </div>
+
+      <div class="field">
+        <span class="field-label">Znesek (€)</span>
+        <input type="text" id="znesek-input" inputmode="decimal" placeholder="Npr. 15.50">
+      </div>
+
+      <button class="btn-primary" id="save-btn">✅ Shrani v evidenco</button>
+      <div class="save-note" id="save-note"></div>
+    </section>
+
+    <!-- PREGLED -->
+    <section class="card">
+      <h2>Pregled porabe</h2>
+
+      <div class="overview-controls">
+        <select id="year-select"></select>
+        <select id="month-select"></select>
+      </div>
+
+      <div id="overview-body">
+        <div class="loading">Nalagam podatke...</div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   NASTAVITEV — po deployu Apps Scripta prilepi URL sem:
+   ============================================================ */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdZobyrz4z7HhRrDCLAezV7WjHGyo_Bgn2t5Hku6mHqHulfRgV9c9u66Rz13dLOB_o/exec';
+
+const KATEGORIJE = [
+  "Fiksni stroški","Hrana doma","Hrana zunaj","Malica","Avto","Motor",
+  "Pes","Hangout doma","Hangout zunaj","Oblačila","Darila","Izleti","Ostalo"
+];
+
+const MESECI = ["Januar","Februar","Marec","April","Maj","Junij",
+  "Julij","Avgust","September","Oktober","November","December"];
+
+let appPassword = sessionStorage.getItem('appPassword') || null;
+let selectedOseba = 'Anej';
+let selectedDatumHitri = 'Danes';
+let selectedKategorija = KATEGORIJE[1]; // "Hrana doma", kot privzeto v originalu
+let allRows = [];
+
+/* ---------------- API HELPER ----------------
+   Pomembno: NE nastavljamo Content-Type headerja ročno.
+   To se izogne "preflight" OPTIONS zahtevku, ki ga Apps Script
+   ne znа obravnavati — brez tega fetch iz drugega izvora (CORS) ne deluje. */
+async function apiCall(action, extra = {}, passwordOverride) {
+  const password = passwordOverride !== undefined ? passwordOverride : appPassword;
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action, password, ...extra })
+  });
+  if (!res.ok) throw new Error('Strežnik ni dosegljiv (' + res.status + ')');
+  return res.json();
+}
+
+/* ---------------- LOGIN ---------------- */
+const loginScreen = document.getElementById('login-screen');
+const appScreen = document.getElementById('app-screen');
+const passwordInput = document.getElementById('password-input');
+const loginBtn = document.getElementById('login-btn');
+const loginError = document.getElementById('login-error');
+
+loginBtn.addEventListener('click', handleLogin);
+passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+async function handleLogin() {
+  const pass = passwordInput.value;
+  if (!pass) return;
+  loginBtn.disabled = true;
+  loginError.textContent = '';
+  try {
+    const r = await apiCall('login', {}, pass);
+    if (r.success) {
+      appPassword = pass;
+      sessionStorage.setItem('appPassword', pass);
+      showApp();
+    } else {
+      loginError.textContent = '❌ Napačno geslo!';
+    }
+  } catch (e) {
+    loginError.textContent = 'Napaka povezave: ' + e.message;
+  }
+  loginBtn.disabled = false;
+}
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.removeItem('appPassword');
+  appPassword = null;
+  appScreen.style.display = 'none';
+  loginScreen.style.display = 'flex';
+  passwordInput.value = '';
+});
+
+function showApp() {
+  loginScreen.style.display = 'none';
+  appScreen.style.display = 'block';
+  initApp();
+}
+
+// Če je geslo že shranjeno v tej seji, preveri in preskoči prijavo
+(async function tryAutoLogin() {
+  if (!appPassword) return;
+  try {
+    const r = await apiCall('login', {}, appPassword);
+    if (r.success) showApp();
+    else sessionStorage.removeItem('appPassword');
+  } catch (e) { /* ostani na login zaslonu */ }
+})();
+
+/* ---------------- INIT APP ---------------- */
+let initialized = false;
+function initApp() {
+  if (initialized) return;
+  initialized = true;
+
+  buildPillGroup('kategorija-group', KATEGORIJE, selectedKategorija, val => selectedKategorija = val);
+  buildYearSelect();
+  document.getElementById('year-select').addEventListener('change', loadOverview);
+  document.getElementById('month-select').addEventListener('change', renderMonth);
+
+  document.getElementById('date-custom').valueAsDate = new Date();
+
+  loadOverview();
+}
+
+/* ---------------- PILLS: Oseba ---------------- */
+document.querySelectorAll('#oseba-group .pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#oseba-group .pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedOseba = btn.dataset.value;
+  });
+});
+
+/* ---------------- PILLS: Hitri datum ---------------- */
+document.querySelectorAll('#datum-hitri-group .pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#datum-hitri-group .pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedDatumHitri = btn.dataset.value;
+    document.getElementById('date-custom').style.display =
+      (selectedDatumHitri === 'Drug datum') ? 'block' : 'none';
+  });
+});
+
+function buildPillGroup(containerId, options, defaultValue, onSelect) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'pill neutral' + (opt === defaultValue ? ' active' : '');
+    btn.textContent = opt;
+    btn.dataset.value = opt;
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      onSelect(opt);
+    });
+    container.appendChild(btn);
+  });
+}
+
+/* ---------------- DATUM helpers ---------------- */
+function getSelectedDate() {
+  const today = new Date();
+  if (selectedDatumHitri === 'Danes') return today;
+  if (selectedDatumHitri === 'Včeraj') {
+    const d = new Date(today); d.setDate(d.getDate() - 1); return d;
+  }
+  const val = document.getElementById('date-custom').value;
+  return val ? new Date(val + 'T00:00:00') : today;
+}
+function formatDateSL(d) {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}.${mm}.${yyyy}`;
+}
+function parseDateSL(str) {
+  if (!str) return null;
+  const parts = String(str).split('.');
+  if (parts.length !== 3) return null;
+  const [dd, mm, yyyy] = parts.map(Number);
+  if (!dd || !mm || !yyyy) return null;
+  return new Date(yyyy, mm - 1, dd);
+}
+
+/* ---------------- SHRANI VNOS ---------------- */
+document.getElementById('save-btn').addEventListener('click', handleSave);
+const saveNote = document.getElementById('save-note');
+
+async function handleSave() {
+  const opis = document.getElementById('opis-input').value.trim();
+  const zneskRaw = document.getElementById('znesek-input').value.trim().replace(',', '.');
+  const znesek = parseFloat(zneskRaw);
+
+  saveNote.className = 'save-note';
+  if (!opis || !zneskRaw || isNaN(znesek) || znesek <= 0) {
+    saveNote.textContent = '⚠️ Vnesi veljaven opis in znesek!';
+    saveNote.classList.add('err');
+    return;
+  }
+
+  const datumObj = getSelectedDate();
+  const leto = String(datumObj.getFullYear());
+  const row = {
+    Datum: formatDateSL(datumObj),
+    Oseba: selectedOseba,
+    Kategorija: selectedKategorija,
+    Opis: opis,
+    Znesek: znesek
+  };
+
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.disabled = true;
+  saveNote.textContent = 'Shranjujem...';
+
+  try {
+    const r = await apiCall('append', { sheet: leto, row });
+    if (r.success) {
+      saveNote.textContent = `Uspešno shranjeno v list ${leto}!`;
+      saveNote.classList.add('ok');
+      document.getElementById('opis-input').value = '';
+      document.getElementById('znesek-input').value = '';
+      // Če je bil vnos v isto leto, ki je trenutno prikazano, ga takoj prikaži
+      if (document.getElementById('year-select').value === leto) {
+        await loadOverview();
+      }
+    } else {
+      saveNote.textContent = 'Napaka: ' + (r.error || 'neznana napaka');
+      saveNote.classList.add('err');
+    }
+  } catch (e) {
+    saveNote.textContent = 'Napaka pri shranjevanju: ' + e.message;
+    saveNote.classList.add('err');
+  }
+  saveBtn.disabled = false;
+}
+
+/* ---------------- PREGLED PORABE ---------------- */
+function buildYearSelect() {
+  const yearSelect = document.getElementById('year-select');
+  const thisYear = new Date().getFullYear();
+  yearSelect.innerHTML = '';
+  for (let y = thisYear - 1; y <= thisYear + 1; y++) {
+    const opt = document.createElement('option');
+    opt.value = String(y);
+    opt.textContent = y;
+    if (y === thisYear) opt.selected = true;
+    yearSelect.appendChild(opt);
+  }
+}
+
+async function loadOverview() {
+  const year = document.getElementById('year-select').value;
+  const overviewBody = document.getElementById('overview-body');
+  overviewBody.innerHTML = '<div class="loading">Nalagam podatke...</div>';
+
+  try {
+    const r = await apiCall('read', { sheet: year });
+    const rows = r.rows || [];
+    allRows = rows.map(row => ({
+      ...row,
+      _date: parseDateSL(row.Datum),
+      Znesek: parseFloat(row.Znesek) || 0
+    })).filter(row => row._date);
+
+    populateMonthSelect();
+    renderMonth();
+  } catch (e) {
+    overviewBody.innerHTML = `<div class="empty-state">Napaka pri branju podatkov: ${e.message}</div>`;
+  }
+}
+
+function populateMonthSelect() {
+  const monthSelect = document.getElementById('month-select');
+  const monthsPresent = [...new Set(allRows.map(r => r._date.getMonth()))].sort((a, b) => b - a);
+  monthSelect.innerHTML = '';
+
+  if (monthsPresent.length === 0) {
+    // ni podatkov — ponudi vsaj trenutni mesec
+    monthsPresent.push(new Date().getMonth());
+  }
+  monthsPresent.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = MESECI[m];
+    monthSelect.appendChild(opt);
+  });
+}
+
+function renderMonth() {
+  const overviewBody = document.getElementById('overview-body');
+  const monthSelect = document.getElementById('month-select');
+  if (!monthSelect.value && monthSelect.value !== '0') {
+    overviewBody.innerHTML = `<div class="empty-state">V tem listu še ni podatkov.</div>`;
+    return;
+  }
+  const month = parseInt(monthSelect.value, 10);
+  const rows = allRows.filter(r => r._date.getMonth() === month);
+
+  const sumAnej = rows.filter(r => r.Oseba === 'Anej').reduce((s, r) => s + r.Znesek, 0);
+  const sumUrsa = rows.filter(r => r.Oseba === 'Urša').reduce((s, r) => s + r.Znesek, 0);
+  const sumSkupaj = sumAnej + sumUrsa;
+
+  // Poraba po kategorijah
+  const catTotals = {};
+  rows.forEach(r => { catTotals[r.Kategorija] = (catTotals[r.Kategorija] || 0) + r.Znesek; });
+  const catRows = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+
+  let catTableHtml = '';
+  if (catRows.length === 0) {
+    catTableHtml = '<div class="empty-state">Ni podatkov za ta mesec.</div>';
+  } else {
+    catTableHtml = `<table><thead><tr>
+        <th>Kategorija</th><th class="num">Znesek</th><th class="num">Delež</th>
+      </tr></thead><tbody>` +
+      catRows.map(([cat, znesek]) => {
+        const delez = sumSkupaj > 0 ? ((znesek / sumSkupaj) * 100).toFixed(1) : '0.0';
+        return `<tr><td>${escapeHtml(cat)}</td><td class="num">${znesek.toFixed(2)} €</td><td class="num">${delez} %</td></tr>`;
+      }).join('') +
+      `</tbody></table>`;
+  }
+
+  // Seznam transakcij
+  const sortedRows = [...rows].sort((a, b) => b._date - a._date);
+  let listTableHtml = '';
+  if (sortedRows.length === 0) {
+    listTableHtml = '<div class="empty-state">Ni transakcij za ta mesec.</div>';
+  } else {
+    listTableHtml = `<table><thead><tr>
+        <th>Datum</th><th>Oseba</th><th>Kategorija</th><th>Opis</th><th class="num">Znesek</th>
+      </tr></thead><tbody>` +
+      sortedRows.map(r => `<tr>
+          <td>${formatDateSL(r._date)}</td>
+          <td><span class="badge-person ${r.Oseba === 'Anej' ? 'anej' : 'ursa'}">${escapeHtml(r.Oseba)}</span></td>
+          <td>${escapeHtml(r.Kategorija)}</td>
+          <td>${escapeHtml(r.Opis)}</td>
+          <td class="num">${r.Znesek.toFixed(2)} €</td>
+        </tr>`).join('') +
+      `</tbody></table>`;
+  }
+
+  overviewBody.innerHTML = `
+    <div class="metrics">
+      <div class="metric anej"><div class="label">Anej</div><div class="value">${sumAnej.toFixed(2)} €</div></div>
+      <div class="metric ursa"><div class="label">Urša</div><div class="value">${sumUrsa.toFixed(2)} €</div></div>
+      <div class="metric skupaj"><div class="label">Skupaj</div><div class="value">${sumSkupaj.toFixed(2)} €</div></div>
+    </div>
+    <h3 style="font-size:14px;margin:0 0 10px;">🏷️ Poraba po kategorijah</h3>
+    ${catTableHtml}
+    <h3 style="font-size:14px;margin:18px 0 10px;">📜 Seznam vseh stroškov</h3>
+    ${listTableHtml}
+  `;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+</script>
+</body>
+</html>
