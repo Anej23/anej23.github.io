@@ -267,6 +267,7 @@
 </head>
 <body>
 
+<!-- ===================== LOGIN ===================== -->
 <div id="login-screen">
   <div class="login-card">
     <span class="lock">🔒</span>
@@ -277,6 +278,7 @@
   </div>
 </div>
 
+<!-- ===================== APP ===================== -->
 <div id="app-screen">
   <div class="wrap">
 
@@ -285,6 +287,7 @@
       <button class="icon-btn" id="logout-btn">Odjava</button>
     </header>
 
+    <!-- NOV VNOS -->
     <section class="card">
       <h2>Nov vnos</h2>
 
@@ -325,6 +328,7 @@
       <div class="save-note" id="save-note"></div>
     </section>
 
+    <!-- PREGLED -->
     <section class="card">
       <h2>Pregled porabe</h2>
 
@@ -345,7 +349,7 @@
 /* ============================================================
    NASTAVITEV — po deployu Apps Scripta prilepi URL sem:
    ============================================================ */
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4888co3JT-998n_3TeaQ0Q1X-YcVOJUC9Layfh8XH4zuUmUOQppUuBEr50yLx6d0iEQ/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdZobyrz4z7HhRrDCLAezV7WjHGyo_Bgn2t5Hku6mHqHulfRgV9c9u66Rz13dLOB_o/exec';
 
 const KATEGORIJE = [
   "Fiksni stroški","Hrana doma","Hrana zunaj","Malica","Avto","Motor",
@@ -358,10 +362,13 @@ const MESECI = ["Januar","Februar","Marec","April","Maj","Junij",
 let appPassword = sessionStorage.getItem('appPassword') || null;
 let selectedOseba = 'Anej';
 let selectedDatumHitri = 'Danes';
-let selectedKategorija = KATEGORIJE[1]; 
+let selectedKategorija = KATEGORIJE[1]; // "Hrana doma", kot privzeto v originalu
 let allRows = [];
 
-/* ---------------- API HELPER ---------------- */
+/* ---------------- API HELPER ----------------
+   Pomembno: NE nastavljamo Content-Type headerja ročno.
+   To se izogne "preflight" OPTIONS zahtevku, ki ga Apps Script
+   ne znа obravnavati — brez tega fetch iz drugega izvora (CORS) ne deluje. */
 async function apiCall(action, extra = {}, passwordOverride) {
   const password = passwordOverride !== undefined ? passwordOverride : appPassword;
   const res = await fetch(APPS_SCRIPT_URL, {
@@ -416,6 +423,7 @@ function showApp() {
   initApp();
 }
 
+// Če je geslo že shranjeno v tej seji, preveri in preskoči prijavo
 (async function tryAutoLogin() {
   if (!appPassword) return;
   try {
@@ -478,7 +486,7 @@ function buildPillGroup(containerId, options, defaultValue, onSelect) {
   });
 }
 
-/* ---------------- DATUM HELPERS ---------------- */
+/* ---------------- DATUM helpers ---------------- */
 function getSelectedDate() {
   const today = new Date();
   if (selectedDatumHitri === 'Danes') return today;
@@ -488,7 +496,6 @@ function getSelectedDate() {
   const val = document.getElementById('date-custom').value;
   return val ? new Date(val + 'T00:00:00') : today;
 }
-
 function formatDateSL(d) {
   const dd = String(d.getDate()).padStart(2, '0');
   const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -504,36 +511,13 @@ function formatDateShort(d) {
   return `${dd}.${mm}.`;
 }
 
-// Fixed parser to support spaces like "26. 4. 2026", ISO dates, and standard dates
 function parseDateSL(str) {
   if (!str) return null;
-  const strVal = String(str).trim();
-
-  // 1. Slovenian format (handles "26.4.2026", "26. 4. 2026", etc.)
-  if (strVal.includes('.')) {
-    const parts = strVal.split('.').map(p => p.trim()).filter(p => p.length > 0);
-    if (parts.length >= 3) {
-      const dd = parseInt(parts[0], 10);
-      const mm = parseInt(parts[1], 10);
-      const yyyy = parseInt(parts[2], 10);
-      if (dd && mm && yyyy) return new Date(yyyy, mm - 1, dd);
-    }
-  }
-
-  // 2. ISO format YYYY-MM-DD
-  if (strVal.includes('-')) {
-    const parts = strVal.split('-').map(p => p.trim());
-    if (parts.length === 3) {
-      const yyyy = parseInt(parts[0], 10);
-      const mm = parseInt(parts[1], 10);
-      const dd = parseInt(parts[2], 10);
-      if (dd && mm && yyyy) return new Date(yyyy, mm - 1, dd);
-    }
-  }
-
-  // 3. Fallback: JavaScript built-in parser
-  const parsed = new Date(strVal);
-  return isNaN(parsed.getTime()) ? null : parsed;
+  const parts = String(str).split('.');
+  if (parts.length !== 3) return null;
+  const [dd, mm, yyyy] = parts.map(Number);
+  if (!dd || !mm || !yyyy) return null;
+  return new Date(yyyy, mm - 1, dd);
 }
 
 /* ---------------- SHRANI VNOS ---------------- */
@@ -573,6 +557,7 @@ async function handleSave() {
       saveNote.classList.add('ok');
       document.getElementById('opis-input').value = '';
       document.getElementById('znesek-input').value = '';
+      // Če je bil vnos v isto leto, ki je trenutno prikazano, ga takoj prikaži
       if (document.getElementById('year-select').value === leto) {
         await loadOverview();
       }
@@ -609,16 +594,11 @@ async function loadOverview() {
   try {
     const r = await apiCall('read', { sheet: year });
     const rows = r.rows || [];
-    
-    allRows = rows.map(row => {
-      // Cleans decimal commas ("17,2" -> 17.2)
-      const rawZnesek = String(row.Znesek || '0').replace(',', '.').replace(/[^0-9.-]/g, '');
-      return {
-        ...row,
-        _date: parseDateSL(row.Datum),
-        Znesek: parseFloat(rawZnesek) || 0
-      };
-    }).filter(row => row._date !== null);
+    allRows = rows.map(row => ({
+      ...row,
+      _date: parseDateSL(row.Datum),
+      Znesek: parseFloat(row.Znesek) || 0
+    })).filter(row => row._date);
 
     populateMonthSelect();
     renderMonth();
@@ -633,6 +613,7 @@ function populateMonthSelect() {
   monthSelect.innerHTML = '';
 
   if (monthsPresent.length === 0) {
+    // ni podatkov — ponudi vsaj trenutni mesec
     monthsPresent.push(new Date().getMonth());
   }
   monthsPresent.forEach(m => {
@@ -657,7 +638,7 @@ function renderMonth() {
   const sumUrsa = rows.filter(r => r.Oseba === 'Urša').reduce((s, r) => s + r.Znesek, 0);
   const sumSkupaj = sumAnej + sumUrsa;
 
-  // Poraba po kategorijah
+  // Poraba po kategorijah (navadna, ni scrollable)
   const catTotals = {};
   rows.forEach(r => { catTotals[r.Kategorija] = (catTotals[r.Kategorija] || 0) + r.Znesek; });
   const catRows = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
@@ -676,7 +657,7 @@ function renderMonth() {
       `</tbody></table>`;
   }
 
-  // Seznam transakcij (Kategorija skrita, Datum skrajšan na dd.mm.)
+  // Seznam transakcij (Kategorija skrita, Datum skrajšan, scrollable levo-desno)
   const sortedRows = [...rows].sort((a, b) => b._date - a._date);
   let listTableHtml = '';
   if (sortedRows.length === 0) {
