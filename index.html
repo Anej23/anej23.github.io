@@ -480,6 +480,14 @@ function formatDateSL(d) {
   return `${dd}.${mm}.${yyyy}`;
 }
 
+// Compact date, day.month only — used in the transaction list where
+// year/month are already implied by the selected filters above the table.
+function formatDateShort(d) {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}.${mm}.`;
+}
+
 // Fixed parser to support spaces like "26. 4. 2026", ISO dates, and standard dates
 function parseDateSL(str) {
   if (!str) return null;
@@ -652,19 +660,18 @@ function renderMonth() {
       `</tbody></table>`;
   }
 
-  // Seznam transakcij
+  // Seznam transakcij (Kategorija skrita, Datum skrajšan na dd.mm.)
   const sortedRows = [...rows].sort((a, b) => b._date - a._date);
   let listTableHtml = '';
   if (sortedRows.length === 0) {
     listTableHtml = '<div class="empty-state">Ni transakcij za ta mesec.</div>';
   } else {
     listTableHtml = `<table><thead><tr>
-        <th>Datum</th><th>Oseba</th><th>Kategorija</th><th>Opis</th><th class="num">Znesek</th>
+        <th>Datum</th><th>Oseba</th><th>Opis</th><th class="num">Znesek</th>
       </tr></thead><tbody>` +
       sortedRows.map(r => `<tr>
-          <td>${formatDateSL(r._date)}</td>
+          <td>${formatDateShort(r._date)}</td>
           <td><span class="badge-person ${r.Oseba === 'Anej' ? 'anej' : 'ursa'}">${escapeHtml(r.Oseba)}</span></td>
-          <td>${escapeHtml(r.Kategorija)}</td>
           <td>${escapeHtml(r.Opis)}</td>
           <td class="num">${r.Znesek.toFixed(2)} €</td>
         </tr>`).join('') +
